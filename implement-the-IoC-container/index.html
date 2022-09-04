@@ -1,0 +1,189 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width,initial-scale=1"><title>实现自己的IoC容器 | ZeaLotSean</title><meta name="author" content="ZeaLotSean,zxsean@126.com"><meta name="copyright" content="ZeaLotSean"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="目录 什么是IoC 实现 1.定义IIoCConfig 2.定义IoCConfig实现 3.定义IoCContainer容器接口 4.使用反射实现IoC容器    什么是IoCIoC是英文Inversion of Control的缩写,通称”控制反转“.主要用来解决依赖倒置.可以更好的实现面向接口编程,使各组件解耦.   实现1.定义IIoCConfig123456public interface">
+<meta property="og:type" content="article">
+<meta property="og:title" content="实现自己的IoC容器">
+<meta property="og:url" content="https://asuka4every.top/implement-the-IoC-container/index.html">
+<meta property="og:site_name" content="ZeaLotSean">
+<meta property="og:description" content="目录 什么是IoC 实现 1.定义IIoCConfig 2.定义IoCConfig实现 3.定义IoCContainer容器接口 4.使用反射实现IoC容器    什么是IoCIoC是英文Inversion of Control的缩写,通称”控制反转“.主要用来解决依赖倒置.可以更好的实现面向接口编程,使各组件解耦.   实现1.定义IIoCConfig123456public interface">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/zxsean/cloudimg/img/20210522235442.png">
+<meta property="article:published_time" content="2021-11-18T02:52:44.000Z">
+<meta property="article:modified_time" content="2022-03-02T15:28:18.273Z">
+<meta property="article:author" content="ZeaLotSean">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://cdn.jsdelivr.net/gh/zxsean/cloudimg/img/20210522235442.png"><link rel="shortcut icon" href="/images/favicon.png"><link rel="canonical" href="https://asuka4every.top/implement-the-IoC-container/"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//s4.cnzz.com"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" media="print" onload="this.media='all'"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/node-snackbar/dist/snackbar.min.css" media="print" onload="this.media='all'"><script async="async" data-pjax="data-pjax" src="https://s4.cnzz.com/z_stat.php?id=1279948603&amp;web_id=1279948603"></script><script>const GLOBAL_CONFIG = { 
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: {"plugin":"highlighjs","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":300},
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '天',
+  date_suffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: {"limitCount":50,"languages":{"author":"作者: ZeaLotSean","link":"链接: ","source":"来源: ZeaLotSean","info":"著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。"}},
+  lightbox: 'fancybox',
+  Snackbar: {"chs_to_cht":"你已切换为繁体","cht_to_chs":"你已切换为简体","day_to_night":"你已切换为深色模式","night_to_day":"你已切换为浅色模式","bgLight":"#49b1f5","bgDark":"#121212","position":"bottom-left"},
+  source: {
+    jQuery: 'https://cdn.jsdelivr.net/npm/jquery@latest/dist/jquery.min.js',
+    justifiedGallery: {
+      js: 'https://cdn.jsdelivr.net/npm/justifiedGallery/dist/js/jquery.justifiedGallery.min.js',
+      css: 'https://cdn.jsdelivr.net/npm/justifiedGallery/dist/css/justifiedGallery.min.css'
+    },
+    fancybox: {
+      js: 'https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@latest/dist/jquery.fancybox.min.js',
+      css: 'https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@latest/dist/jquery.fancybox.min.css'
+    }
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isanchor: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: '实现自己的IoC容器',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2022-03-02 23:28:18'
+}</script><noscript><style type="text/css">
+  #nav {
+    opacity: 1
+  }
+  .justified-gallery img {
+    opacity: 1
+  }
+
+  #recent-posts time,
+  #post-meta time {
+    display: inline !important
+  }
+</style></noscript><script>(win=>{
+    win.saveToLocal = {
+      set: function setWithExpiry(key, value, ttl) {
+        if (ttl === 0) return
+        const now = new Date()
+        const expiryDay = ttl * 86400000
+        const item = {
+          value: value,
+          expiry: now.getTime() + expiryDay,
+        }
+        localStorage.setItem(key, JSON.stringify(item))
+      },
+
+      get: function getWithExpiry(key) {
+        const itemStr = localStorage.getItem(key)
+
+        if (!itemStr) {
+          return undefined
+        }
+        const item = JSON.parse(itemStr)
+        const now = new Date()
+
+        if (now.getTime() > item.expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return item.value
+      }
+    }
+  
+    win.getScript = url => new Promise((resolve, reject) => {
+      const script = document.createElement('script')
+      script.src = url
+      script.async = true
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    })
+  
+      win.activateDarkMode = function () {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = function () {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+          if (t === 'dark') activateDarkMode()
+          else if (t === 'light') activateLightMode()
+        
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+    const detectApple = () => {
+      if (GLOBAL_CONFIG_SITE.isHome && /iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+    })(window)</script><meta name="generator" content="Hexo 5.4.1"></head><body><div id="loading-box"><div class="loading-left-bg"></div><div class="loading-right-bg"></div><div class="spinner-box"><div class="configure-border-1"><div class="configure-core"></div></div><div class="configure-border-2"><div class="configure-core"></div></div><div class="loading-word">加载中...</div></div></div><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="/images/avatar.jpg" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data"><div class="data-item is-center"><div class="data-item-link"><a href="/archives/"><div class="headline">文章</div><div class="length-num">15</div></a></div></div><div class="data-item is-center"><div class="data-item-link"><a href="/tags/"><div class="headline">标签</div><div class="length-num">11</div></a></div></div><div class="data-item is-center"><div class="data-item-link"><a href="/categories/"><div class="headline">分类</div><div class="length-num">6</div></a></div></div></div><hr/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="javascript:void(0);"><i class="fa-fw fa fa-heartbeat"></i><span> 清单</span><i class="fas fa-chevron-down expand"></i></a><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> 音乐</span></a></li><li><a class="site-page child" href="/Gallery/"><i class="fa-fw fas fa-images"></i><span> 照片</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> 电影</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友情链接</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于我</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url('https://cdn.jsdelivr.net/gh/zxsean/cloudimg/img/20210522235442.png')"><nav id="nav"><span id="blog_name"><a id="site-name" href="/">ZeaLotSean</a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="javascript:void(0);"><i class="fa-fw fa fa-heartbeat"></i><span> 清单</span><i class="fas fa-chevron-down expand"></i></a><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> 音乐</span></a></li><li><a class="site-page child" href="/Gallery/"><i class="fa-fw fas fa-images"></i><span> 照片</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> 电影</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友情链接</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于我</span></a></div></div><div id="toggle-menu"><a class="site-page"><i class="fas fa-bars fa-fw"></i></a></div></div></nav><div id="post-info"><h1 class="post-title">实现自己的IoC容器</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2021-11-18T02:52:44.000Z" title="发表于 2021-11-18 10:52:44">2021-11-18</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2022-03-02T15:28:18.273Z" title="更新于 2022-03-02 23:28:18">2022-03-02</time></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">字数总计:</span><span class="word-count">723</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">阅读时长:</span><span>3分钟</span></span><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title="实现自己的IoC容器"><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">阅读量:</span><span id="busuanzi_value_page_pv"></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="post-content" id="article-container"><h2 id="目录"><a href="#目录" class="headerlink" title="目录"></a>目录</h2><ul>
+<li><a href="##%E4%BB%80%E4%B9%88%E6%98%AFIoC">什么是IoC</a></li>
+<li><a href="##%E5%AE%9E%E7%8E%B0">实现</a><ul>
+<li><a href="##1.%E5%AE%9A%E4%B9%89IIoCConfig">1.定义IIoCConfig</a></li>
+<li><a href="##2.%E5%AE%9A%E4%B9%89IoCConfig%E5%AE%9E%E7%8E%B0">2.定义IoCConfig实现</a></li>
+<li><a href="##3.%E5%AE%9A%E4%B9%89IoCContainer%E5%AE%B9%E5%99%A8%E6%8E%A5%E5%8F%A3">3.定义IoCContainer容器接口</a></li>
+<li><a href="##4.%E4%BD%BF%E7%94%A8%E5%8F%8D%E5%B0%84%E5%AE%9E%E7%8E%B0IoC%E5%AE%B9%E5%99%A8">4.使用反射实现IoC容器</a></li>
+</ul>
+</li>
+</ul>
+<h2 id="什么是IoC"><a href="#什么是IoC" class="headerlink" title="什么是IoC"></a>什么是IoC</h2><p>IoC是英文Inversion of Control的缩写,通称”<strong>控制反转</strong>“.<br>主要用来解决依赖倒置.<br>可以更好的实现面向接口编程,使各组件解耦.  </p>
+<h2 id="实现"><a href="#实现" class="headerlink" title="实现"></a>实现</h2><h3 id="1-定义IIoCConfig"><a href="#1-定义IIoCConfig" class="headerlink" title="1.定义IIoCConfig"></a>1.定义IIoCConfig</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">public interface IIoCConfig</span><br><span class="line">&#123;</span><br><span class="line">    void AddConfig&lt;TInterface, TType&gt;();</span><br><span class="line"></span><br><span class="line">    Dictionary&lt;Type, Type&gt; ConfigDictionary &#123; get; &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="2-定义IoCConfig实现"><a href="#2-定义IoCConfig实现" class="headerlink" title="2.定义IoCConfig实现"></a>2.定义IoCConfig实现</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line">public class IoCConfig : IIoCConfig</span><br><span class="line">&#123;</span><br><span class="line">    /// &lt;summary&gt;</span><br><span class="line">    /// 存放配置的字典对象, Key是接口类型, Value是实现接口的类型</span><br><span class="line">    /// &lt;/summary&gt;</span><br><span class="line">    private Dictionary&lt;Type, Type&gt; _configDictionary = new Dictionary&lt;Type, Type&gt;();</span><br><span class="line"></span><br><span class="line">    /// &lt;summary&gt;</span><br><span class="line">    /// 添加配置</span><br><span class="line">    /// &lt;/summary&gt;</span><br><span class="line">    /// &lt;typeparam name=&quot;TInterface&quot;&gt;接口&lt;/typeparam&gt;</span><br><span class="line">    /// &lt;typeparam name=&quot;TType&quot;&gt;实现接口的类型&lt;/typeparam&gt;</span><br><span class="line">    public void AddConfig&lt;TInterface, TType&gt;()</span><br><span class="line">    &#123;</span><br><span class="line">        if (typeof(TInterface).IsAssignableForm(typeof(TType)))</span><br><span class="line">        &#123;</span><br><span class="line">            _configDictionary.Add(typeof(TInterface), typeof(TType));</span><br><span class="line">        &#125;</span><br><span class="line">        else</span><br><span class="line">        &#123;</span><br><span class="line">            throw new Exception(&quot;类型未实现接口&quot;);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public Dictionary&lt;Type, Type&gt; ConfigDictionary</span><br><span class="line">    &#123;</span><br><span class="line">        get</span><br><span class="line">        &#123;</span><br><span class="line">            return _configDictionary;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>使用一个字典来保存Interface跟Class的对应关系.<br>这里是仿造Ninject的配置方式,使用代码来配置.<br>这种配置方式有个好处就是不会写错,因为有IDE来给你检查拼写错误.  </p>
+<h3 id="3-定义IoCContainer容器接口"><a href="#3-定义IoCContainer容器接口" class="headerlink" title="3.定义IoCContainer容器接口"></a>3.定义IoCContainer容器接口</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">public interface IIoCContainer</span><br><span class="line">&#123;</span><br><span class="line">    /// &lt;summary&gt;</span><br><span class="line">    /// 根据接口返回对应的实例</span><br><span class="line">    /// &lt;/summary&gt;</span><br><span class="line">    /// &lt;typeparam name=&quot;TInterface&quot;&gt;&lt;/typeparam&gt;</span><br><span class="line">    /// &lt;returns&gt;&lt;/returns&gt;</span><br><span class="line">    TInterface Get&lt;TInterface&gt;();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="4-使用反射实现IoC容器"><a href="#4-使用反射实现IoC容器" class="headerlink" title="4.使用反射实现IoC容器"></a>4.使用反射实现IoC容器</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line">public class ReflectionContainer : IIoCContainer</span><br><span class="line">&#123;</span><br><span class="line">    /// &lt;summary&gt;</span><br><span class="line">    /// 配置实例</span><br><span class="line">    /// &lt;/summary&gt;</span><br><span class="line">    private IIoCConfig m_config;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    /// &lt;summary&gt;</span><br><span class="line">    /// 构造函数</span><br><span class="line">    /// &lt;/summary&gt;</span><br><span class="line">    /// &lt;param name=&quot;_config&quot;&gt;ioc配置&lt;/param&gt;</span><br><span class="line">    public ReflectionContainer(IIoCConfig _config)</span><br><span class="line">    &#123;</span><br><span class="line">        m_config = _config;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    /// &lt;summary&gt;</span><br><span class="line">    /// 根据接口获取实例对象</span><br><span class="line">    /// &lt;/summary&gt;</span><br><span class="line">    /// &lt;typeparam name=&quot;TInterface&quot;&gt;接口&lt;/typeparam&gt;</span><br><span class="line">    /// &lt;returns&gt;&lt;/returns&gt;</span><br><span class="line">    public TInterface Get&lt;TInterface&gt;()</span><br><span class="line">    &#123;</span><br><span class="line">        Type _type;</span><br><span class="line"></span><br><span class="line">        var _can = m_config.ConfigDictionary.TryGetValue(typeof(TInterface), out _type);</span><br><span class="line"></span><br><span class="line">        if(_can)</span><br><span class="line">        &#123;</span><br><span class="line">            // 反射实例化对象</span><br><span class="line">            return (TInterface)Activator.CreateInstance(_type);</span><br><span class="line">        &#125;</span><br><span class="line">        else</span><br><span class="line">        &#123;</span><br><span class="line">            throw new Exception(&quot;未找到队友的类型&quot;);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="5-使用Emit实现IoC容器"><a href="#5-使用Emit实现IoC容器" class="headerlink" title="5.使用Emit实现IoC容器"></a>5.使用Emit实现IoC容器</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br></pre></td><td class="code"><pre><span class="line">public class EmitContainer : IIOCContainer</span><br><span class="line">&#123;</span><br><span class="line">    private IIoCConfig m_config;</span><br><span class="line"></span><br><span class="line">    public EmitContainer(IIoCConfig _config)</span><br><span class="line">    &#123;</span><br><span class="line">        m_config = _config;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public TInterface Get&lt;TInterface&gt;()</span><br><span class="line">    &#123;</span><br><span class="line">        Type _type;</span><br><span class="line"></span><br><span class="line">        var _can = m_config.ConfigDictionary.TryGetValue(typeof(TInterface), out _type);</span><br><span class="line"></span><br><span class="line">        if (_can)</span><br><span class="line">        &#123;</span><br><span class="line">            BindingFlags _defaultFlags = BindingFlags.Public | BindingFlags.Instance;</span><br><span class="line"></span><br><span class="line">            // 获取默认构造函数</span><br><span class="line">            var _constructors = _type.GetConstructors(_defaultFlags);</span><br><span class="line"></span><br><span class="line">            var _t = (TInterface)this.CreateInstanceByEmit(_constructors[0]);</span><br><span class="line"></span><br><span class="line">            return _t;</span><br><span class="line">        &#125;</span><br><span class="line">        else</span><br><span class="line">        &#123;</span><br><span class="line">            throw new Exception(&quot;未找到对应的类型&quot;);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    private Object CreateInstanceByEmit(ConstructInfo _constructor)</span><br><span class="line">    &#123;</span><br><span class="line">        //动态方法</span><br><span class="line">        var _dynamicMethod = new DynamicMethod(Guid.NewGuid().ToString(&quot;N&quot;), typeof(Object), new[] &#123; typeof(object[]) &#125;, true);  </span><br><span class="line"></span><br><span class="line">        //方法IL</span><br><span class="line">        ILGenerator _il = _dynamicMethod.GetILGenerator();</span><br><span class="line"></span><br><span class="line">        //实例化命令</span><br><span class="line">        _il.Emit(OpCodes.Newobj, constructor);</span><br><span class="line"></span><br><span class="line">        //如果是值类型装箱</span><br><span class="line">        if (constructor.ReflectedType.IsValueType)</span><br><span class="line">        &#123;</span><br><span class="line">            _il.Emit(OpCodes.Box, constructor.ReflectedType);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        //返回</span><br><span class="line">        _il.Emit(OpCodes.Ret);</span><br><span class="line"></span><br><span class="line">        //用FUNC去关联方法</span><br><span class="line">        var _func = (Func&lt;Object&gt;)_dynamicMethod.CreateDelegate(typeof(Func&lt;Object&gt;));</span><br><span class="line"></span><br><span class="line">        //执行方法</span><br><span class="line">        return _func.Invoke();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="6-实现IoCContainerManager"><a href="#6-实现IoCContainerManager" class="headerlink" title="6.实现IoCContainerManager"></a>6.实现IoCContainerManager</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">public class IoCContainerManager</span><br><span class="line">&#123;</span><br><span class="line">    /// &lt;summary&gt;</span><br><span class="line">    /// 容器</span><br><span class="line">    /// &lt;/summary&gt;</span><br><span class="line">    private static IIOCContainer m_container;</span><br><span class="line"></span><br><span class="line">    public static IIOCContainer</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">文章作者: </span><span class="post-copyright-info"><a href="mailto:zxsean@126.com">ZeaLotSean</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">文章链接: </span><span class="post-copyright-info"><a href="https://asuka4every.top/implement-the-IoC-container/">https://asuka4every.top/implement-the-IoC-container/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="https://asuka4every.top" target="_blank">ZeaLotSean</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"></div><div class="post_share"><div class="social-share" data-image="https://cdn.jsdelivr.net/gh/zxsean/cloudimg/img/20210522235442.png" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/social-share.js/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/social-share.js/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><div class="prev-post pull-left"><a href="/OpenGL-VRML-Materials/"><img class="prev-cover" src="https://cdn.jsdelivr.net/gh/zxsean/cloudimg/img/20210522235442.png" onerror="onerror=null;src='/img/404.jpg'" alt="cover of previous post"><div class="pagination-info"><div class="label">上一篇</div><div class="prev_info">OpenGL VRML Materials 材质参数</div></div></a></div><div class="next-post pull-right"><a href="/DIP-IoC-DI-and-IoC-containers/"><img class="next-cover" src="https://cdn.jsdelivr.net/gh/zxsean/cloudimg/img/20210522235442.png" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="pagination-info"><div class="label">下一篇</div><div class="next_info">深入理解DIP、IoC、DI以及IoC容器</div></div></a></div></nav></div><div class="aside-content" id="aside-content"><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%9B%AE%E5%BD%95"><span class="toc-number">1.</span> <span class="toc-text">目录</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BB%80%E4%B9%88%E6%98%AFIoC"><span class="toc-number">2.</span> <span class="toc-text">什么是IoC</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%9E%E7%8E%B0"><span class="toc-number">3.</span> <span class="toc-text">实现</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-%E5%AE%9A%E4%B9%89IIoCConfig"><span class="toc-number">3.1.</span> <span class="toc-text">1.定义IIoCConfig</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-%E5%AE%9A%E4%B9%89IoCConfig%E5%AE%9E%E7%8E%B0"><span class="toc-number">3.2.</span> <span class="toc-text">2.定义IoCConfig实现</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-%E5%AE%9A%E4%B9%89IoCContainer%E5%AE%B9%E5%99%A8%E6%8E%A5%E5%8F%A3"><span class="toc-number">3.3.</span> <span class="toc-text">3.定义IoCContainer容器接口</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-%E4%BD%BF%E7%94%A8%E5%8F%8D%E5%B0%84%E5%AE%9E%E7%8E%B0IoC%E5%AE%B9%E5%99%A8"><span class="toc-number">3.4.</span> <span class="toc-text">4.使用反射实现IoC容器</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-%E4%BD%BF%E7%94%A8Emit%E5%AE%9E%E7%8E%B0IoC%E5%AE%B9%E5%99%A8"><span class="toc-number">3.5.</span> <span class="toc-text">5.使用Emit实现IoC容器</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#6-%E5%AE%9E%E7%8E%B0IoCContainerManager"><span class="toc-number">3.6.</span> <span class="toc-text">6.实现IoCContainerManager</span></a></li></ol></li></ol></div></div></div></div></main><footer id="footer" style="background-image: url('https://cdn.jsdelivr.net/gh/zxsean/cloudimg/img/20210522235442.png')"><div id="footer-wrap"><div class="copyright">&copy;2020 - 2022 By ZeaLotSean</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></div><!-- div(class="sakana-box" style='position:fixed;bottom:10px;right:10px;')--><div class="sakana-box" style="position:fixed;bottom:10px;right:10px;transform-origin: 100% 100%;"></div><script>function initSakanaTest() {
+  Sakana.init({
+    el:         '.sakana-box',     // 启动元素 node 或 选择器
+    scale:      .5,                // 缩放倍数
+    canSwitchCharacter: true,      // 允许换角色
+  })
+  Sakana.setMute(false);
+}</script><script onload="initSakanaTest()" src="https://cdn.jsdelivr.net/npm/sakana"></script></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="https://cdn.jsdelivr.net/npm/node-snackbar/dist/snackbar.min.js"></script><script>var preloader = {
+  endLoading: () => {
+    document.body.style.overflow = 'auto';
+    document.getElementById('loading-box').classList.add("loaded")
+  },
+  initLoading: () => {
+    document.body.style.overflow = '';
+    document.getElementById('loading-box').classList.remove("loaded")
+
+  }
+}
+window.addEventListener('load',preloader.endLoading())</script><div class="js-pjax"></div><script defer="defer" id="fluttering_ribbon" mobile="false" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1/dist/canvas-fluttering-ribbon.min.js"></script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>
